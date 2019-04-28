@@ -1,7 +1,5 @@
-import requests, json, os, re, sys
+import os, re, sys
 import pandas as pd
-from selenium import webdriver
-from bs4 import BeautifulSoup
 
 inDir = './input/'
 outDir = './output/'
@@ -53,7 +51,6 @@ class eCommTools():
 			else:
 				print('Folder for this UPC already exists.\n')
 				pass
-			print self.upcDir
 
 		counter = 1
 		maxCounter = len(self.upcList)
@@ -61,7 +58,7 @@ class eCommTools():
 			self.upcDir = './output/%s/%s/' % (self.site, upc)
 			
 			try: # readable stdout with minimal progress counter
-				print('Downloading %s/%s: %s' % (counter, maxCounter, upc))
+				print('Downloading %s - %s/%s' % (upc, counter, maxCounter))
 				noDuplicates(upc)
 				
 			except Exception as e: # If SKU url doesn't exist, print error then pass to next one.
@@ -70,6 +67,7 @@ class eCommTools():
 
 			finally: # increment progress counter
 				counter += 1
+				print "\n"
 
 	def dfOutput():
 		""

@@ -7,7 +7,7 @@ def thd(webpage, upc, upcDir):
 		get = requests.get("%s%s" % (webpage, upc), headers=headers)
 		soup = BeautifulSoup(get.content, 'html.parser')
 
-		#print soup.find_all("div", class_="no-results")#[0].string
+		#function!
 		try:
 			if soup.find_all("h1", class_="search-tips__heading")[0].text == "Try different search words":
 				print("UPC NOT FOUND: %s" % upc)
@@ -61,6 +61,7 @@ def thd(webpage, upc, upcDir):
 		except:
 			bullets = ""
 	
+		#function
 		finTitle = "%s %s - %s" % (brand, title, model)
 		finTitle = finTitle.replace("in.", "inch").replace('"', '').replace("(", "").replace(")", "")
 
@@ -69,11 +70,11 @@ def thd(webpage, upc, upcDir):
 		try:
 			manuals = soup.find_all("div", id="more-info", class_="info_guides")[0].find("ul", class_="list list--type-plain")
 			for a in manuals.find_all("a", href=True):
-				print a["href"].split('/')[-1]
-
+				hFile = a["href"].split('/')[-1]
 				manual = requests.get(a["href"], stream=True)
-				with open('%s%s' % (upcDir, a["href"].split('/')[-1]), 'wb') as manDoc:
+				with open('%s%s' % (upcDir, hFile), 'wb') as manDoc:
 					manDoc.write(manual.content)
+				print "Downloaded %s..." % hFile
 		except:
 			print("This listing doesn't contain 'more-info' docs")
 
@@ -88,6 +89,7 @@ def thd(webpage, upc, upcDir):
 				spec = "<li>%s: %s</li>" % (x.text, y.text)
 				specs.append(spec)
 
+		# function
 		browser = webdriver.Chrome()
 		browser.get("%s%s" % (webpage, upc))
 		html = browser.page_source
@@ -106,6 +108,7 @@ def thd(webpage, upc, upcDir):
 				fullImg.append(i)
 		browser.close()
 
+		# function - potential repetitive class function
 		customDictionary = {'title': title, #array[0]
 							'brand': brand, #array[1]
 							'model': model, #array[2]
@@ -122,7 +125,8 @@ def thd(webpage, upc, upcDir):
 							
 		with open('%s/%s-CustomInfo.json' % (upcDir, upc), 'w+') as productTxt:
 			json.dump(customDictionary, productTxt)
-				
+			
+		#function	
 		try:
 			for i, each in enumerate(fullImg):
 				getImg = requests.get(each)
