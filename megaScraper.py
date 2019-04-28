@@ -3,10 +3,11 @@ import pandas as pd
 
 inDir = './input/'
 outDir = './output/'
+action = 'scrape'#sys.argv[1]#genSheet
 site = 'homedepot'#sys.argv[2]
-action = 'scrape'#'scrape'
-spreadsheet = 'dfIn.csv'#sys.argv[1]
-dfIn = "%s%s" % (inDir, spreadsheet)#sys.argv[1]#'Liquidation Offering CR-18-01-67.xlsx'#sys.argv[1]#'Liquidation2.xlsx'
+spreadsheet = 'dfIn.csv'#sys.argv[3]
+dfIn = "%s%s" % (inDir, spreadsheet)
+# ie: Scrape Site With This
 
 class eCommTools():
 	def __init__(self, site, df):
@@ -20,7 +21,7 @@ class eCommTools():
 		elif df.endswith('.txt'): # If tabulated .txt file, ie: Default Amazon sales export.
 			self.df = pd.read_table(df, encoding='cp1252')
 
-		if self.site == 'evine': # SHOULD BE SELF.SITE ?!?!?!?
+		if self.site == 'evine':
 			from scrapers.evn import evn
 			self.scraperFunction = evn
 	
@@ -28,7 +29,7 @@ class eCommTools():
 			self.alnumRegex = re.compile("""[^a-zA-Z0-9&"'. ]""")#re.compile('[^a-zA-Z]')
 			self.evineJS = re.compile('clientSideData={.*?};', re.DOTALL) # compile regex for parsing out the raw syntax of json data
 			
-		elif self.site == 'qvc': # SHOULD BE SELF.SITE ?!?!?!?
+		elif self.site == 'qvc':
 			from scrapers.qvc import qvc
 			self.scraperFunction = qvc
 	
@@ -43,7 +44,7 @@ class eCommTools():
 			self.webpagePrefix = 'https://www.homedepot.com/s/'
 
 	def scrape(self):
-		def noDuplicates(upc): # input dir + upc dir
+		def noDuplicates(upc):
 			if not os.path.exists(self.upcDir): # File/folder doesn't exist for current productID, create it and scrape it.
 				os.makedirs(self.upcDir)
 				self.scraperFunction(self.webpagePrefix, upc, self.upcDir)
@@ -70,8 +71,11 @@ class eCommTools():
 				print "\n"
 
 	def dfOutput():
-		""
-
+		"Use class dfIn as reference for generating output spreadsheet if relevant product present in output/scraped folders"
+	def sales():
+		"parse sales per vender-brand-upc-grade"
+		def taxes():
+			"while gathering sales data, give option to output quarterly tax info"
 if __name__ == "__main__":
 	e = eCommTools(site, dfIn)
 	e.scrape()
