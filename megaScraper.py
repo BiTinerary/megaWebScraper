@@ -72,6 +72,29 @@ class eCommTools():
 
 	def dfOutput():
 		"Use class dfIn as reference for generating output spreadsheet if relevant product present in output/scraped folders"
+		if site == 'homedepot':
+			for index, row in self.df.iterrows():
+				upc = str(row["UPC"])
+				try:
+					with open('./output/%s/%s/%s-CustomInfo.json' % (site, upc, upc), 'r') as customLog: 
+						jLog = json.load(customLog)
+						self.df.loc[index, "Title"] = '=HYPERLINK("%s", "%s %s - %s")' % (jLog['productUrl'], jLog['brand'], jLog['title'], jLog['model'].replace("Model: ", ""))
+						#self.df.loc[index, "Hyperlink"] = jLog['productUrl']
+						self.df.loc[index, 'Model'] = jLog['model'].replace("Model: ", "")
+						self.df.loc[index, 'UPC'] = jLog["upc"]
+						self.df.loc[index, 'Retail'] = jLog['retail']
+						self.df.loc[index, 'Brand'] = jLog['brand']
+						self.df.loc[index, 'StoreSku'] = jLog['storeSku']
+						#self.df.loc[index, 'Description'] = re.sub(r'[^\x00-\x7F]+',' ', jLog['description'])
+				except Exception as e:
+					print('No scrape file for PID: "%s"' % upc)
+					print(e)
+					pass
+			self.df = self.df[['Title', 'Model', 'Brand', 'StoreSku', 'UPC', 'Retail']]
+		self.df.to_csv('dfOut.csv', index=False)
+		self.df.to_excel('dfOut.xlsx', index=False)
+		print('New Spreadsheet Generated!')
+			
 	def sales():
 		"parse sales per vender-brand-upc-grade"
 		def taxes():
