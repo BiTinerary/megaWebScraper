@@ -1,4 +1,4 @@
-import os, re, sys
+import json, sys, os, re
 import pandas as pd
 
 inDir = './input/'
@@ -70,7 +70,7 @@ class eCommTools():
 				counter += 1
 				print "\n"
 
-	def dfOutput():
+	def dfOutput(self):
 		"Use class dfIn as reference for generating output spreadsheet if relevant product present in output/scraped folders"
 		if site == 'homedepot':
 			for index, row in self.df.iterrows():
@@ -91,14 +91,17 @@ class eCommTools():
 					print(e)
 					pass
 			self.df = self.df[['Title', 'Model', 'Brand', 'StoreSku', 'UPC', 'Retail']]
-		self.df.to_csv('dfOut.csv', index=False)
-		self.df.to_excel('dfOut.xlsx', index=False)
+		self.df.to_csv('./output/dfOut.csv', index=False)
+		self.df.to_excel('./output/dfOut.xlsx', index=False)
 		print('New Spreadsheet Generated!')
 			
 	def sales():
 		"parse sales per vender-brand-upc-grade"
 		def taxes():
 			"while gathering sales data, give option to output quarterly tax info"
+
+
 if __name__ == "__main__":
 	e = eCommTools(site, dfIn)
 	e.scrape()
+	e.dfOutput()

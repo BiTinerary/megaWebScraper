@@ -85,6 +85,10 @@ def thd(webpage, upc, upcDir):
 				pass
 			elif 'return' in x.text.lower() or 'return' in y.text.lower():
 				pass
+			elif 'call 1-' in x.text.lower() or 'call 1-' in y.text.lower():
+				pass
+			elif '.com' in x.text.lower() or '.com' in y.text.lower():
+				pass
 			else:
 				spec = "<li>%s: %s</li>" % (x.text, y.text)
 				specs.append(spec)
