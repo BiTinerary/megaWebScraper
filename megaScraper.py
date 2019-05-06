@@ -3,7 +3,6 @@ import pandas as pd
 
 inDir = './input/'
 outDir = './output/'
-action = 'scrape'#sys.argv[1]#genSheet
 site = 'homedepot'#sys.argv[2]
 spreadsheet = 'dfIn.csv'#sys.argv[3]
 dfIn = "%s%s" % (inDir, spreadsheet)
