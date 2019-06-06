@@ -3,8 +3,8 @@ import pandas as pd
 
 inDir = './input/'
 outDir = './output/'
-site = 'homedepot'#sys.argv[2]
-spreadsheet = 'dfIn.csv'#sys.argv[3]
+site = 'amazon'#sys.argv[2]
+spreadsheet = 'dfin.csv'#sys.argv[3]
 dfIn = "%s%s" % (inDir, spreadsheet)
 # ie: Scrape Site With This
 
@@ -42,6 +42,13 @@ class eCommTools():
 			self.upcList = set([row['UPC'] for index, row in self.df.iterrows()])
 			self.webpagePrefix = 'https://www.homedepot.com/s/'
 
+		elif self.site == 'amazon':
+			from scrapers.amz import amz
+			self.scraperFunction = amz
+	
+			self.upcList = set([row['ASIN'] for index, row in self.df.iterrows()])
+			self.webpagePrefix = 'https://www.amazon.com/dp/'
+
 	def scrape(self):
 		def noDuplicates(upc):
 			if not os.path.exists(self.upcDir): # File/folder doesn't exist for current productID, create it and scrape it.
@@ -67,7 +74,7 @@ class eCommTools():
 
 			finally: # increment progress counter
 				counter += 1
-				print "\n"
+				print("\n")
 
 	def dfOutput(self):
 		"Use class dfIn as reference for generating output spreadsheet if relevant product present in output/scraped folders"
@@ -90,6 +97,9 @@ class eCommTools():
 					print(e)
 					pass
 			self.df = self.df[['Title', 'Model', 'Brand', 'StoreSku', 'UPC', 'Retail']]
+		#elif site == 'amazon':
+		#	for index, row in self.df.iterrows():
+
 		self.df.to_csv('./output/dfOut.csv', index=False)
 		self.df.to_excel('./output/dfOut.xlsx', index=False)
 		print('New Spreadsheet Generated!')
