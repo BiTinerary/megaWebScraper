@@ -76,6 +76,7 @@ class eCommTools():
 				
 			except Exception as e: # If SKU url doesn't exist, print error then pass to next one.
 				print('%s\nThere was an error scraping: "%s"\n' % (e, upc))
+				raise e
 				""" PUT LOGGING FUNCTION HERE """
 				""" EITHER WEBPAGE DOESN'T EXIST (likely) OR VAR PASSED FROM SPREADSHEET IS NONE TYPE"""
 				pass
@@ -117,6 +118,7 @@ class eCommTools():
 						self.df.loc[index, "Item Description"] = '=HYPERLINK("%s%s","%s")' % (self.webpagePrefix, jLog["ProductID"], jLog["ProductName"])#'=HYPERLINK("%s", "%s %s - %s")' % (jLog['productUrl'], jLog['brand'], jLog['productName'], jLog['model'].replace("Model: ", ""))
 						self.df.loc[index, 'EvineRetail'] = jLog['EvinePrice']
 						self.df.loc[index, 'EvineClearancePrice'] = jLog['ClearancePrice']
+						self.df.loc[index, 'ProductDescription'] = jlog['ProductDescription']
 				except Exception as e:
 					print(e)
 					''
@@ -134,4 +136,4 @@ class eCommTools():
 if __name__ == "__main__":
 	e = eCommTools(site, dfIn)
 	e.scrape()
-	e.dfOutput()
+	#e.dfOutput()

@@ -3,6 +3,13 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 
 def evine(webpage, upc, upcDir):
+
+	def DownloadUrl(downloadUrl, variation):
+		dlReq = requests.get(downloadUrl, stream=True)
+		with open('%s%s-%s.jpg' % (upcDir, upc, variation), 'wb') as manDoc:
+			manDoc.write(dlReq.content)
+			print("Downloaded %s..." % upc)
+
 	alnumRegex = re.compile("""[^a-zA-Z0-9&"'. ]""")#re.compile('[^a-zA-Z]')
 	evineJS = re.compile('clientSideData={.*?};', re.DOTALL)
 	print('%s%s' % (webpage, upc))
@@ -30,17 +37,68 @@ def evine(webpage, upc, upcDir):
 	imageUrl = 'http://s7d1.scene7.com/is/image/ShopHQ/%s' % offerCode
 	getImg = requests.get(imageUrl)
 
+
+	browser = webdriver.Chrome()
+	browser.get("%s%s" % (webpage, upc))
+	html = browser.page_source
+	soup = BeautifulSoup(html, 'lxml')
+
+	productColors = soup.find_all("div", class_="line-class-overlay-soldout")#soup.find_all("ul", id="product-color-container")
+	imgLinks = [i.find_all('img') for i in productColors]
+	
+	allProdColorImages = []
+	for each in imgLinks:
+		picUrl = each[0]["src"].split("?")[0]
+		colorName = each[0]["title"].split("-")[0].strip()
+		colorCode = each[0]["data-colorcode"]
+		colorImages = [picUrl, colorCode, colorName]
+		allProdColorImages.append(colorImages)
+		DownloadUrl(picUrl, '%s-%s' % (colorCode, colorName))
+
+	print(allProdColorImages)
+
+	productExamples = soup.find_all("li", class_="detail-images-box-container item additionalPhotos")#soup.find_all("ul", id="product-color-container")
+	exampleLinks = [i.find_all('img') for i in productExamples]
+
+	allExampleImages = []
+	for each in exampleLinks:
+		picUrl = each[0]["src"].split("?")[0]
+		try:
+			imgNum = '%sEXAMPLE' % picUrl.split("_")[1]
+			print(picUrl, imgNum)
+			DownloadUrl(picUrl, imgNum)
+		except:
+			pass
+
+	longDescription = soup.find_all("div", id="long-description")[0].find_all("li")
+	for each in longDescription:
+		if "warranty" in each.get_text().lower():
+			pass
+		else:
+			productLongDescription = each
+
+	
+	dimensionsAndCare = soup.find_all("div", id="customTab0")
+
+	browser.close()
+
 	clearancePrice = productInfo["Price"] #main price. Currently being sold at price. Low ball price.
 	evinePrice = productInfo["PriceArray"][0]['DisplayPrice']
 
-	customDictionary = {'ProductName': productName,
-						'ProductID': upc,
+	print([productName, upc, offerCode, clearancePrice, evinePrice, imageUrl, webpage+upc, productLongDescription, allProdColorImages, allExampleImages, dimensionsAndCare])
+
+	customDictionary = 	{'ProductName': productName,
+						'ProductID': '%s' % upc,
 						'AlternateID': offerCode,
 						'ClearancePrice': clearancePrice,
 						'EvinePrice': evinePrice,
 						'ImageLink': imageUrl,
-						'ProductUrl': '%s%s' % (webpage, url)
+						'ProductUrl': '%s%s' % (webpage, upc),
 						}
+						#'ProductDescription': productLongDescription,
+						#'productColorImageLinks': allProdColorImages,
+						#'productExamplePictures': allExampleImages,
+						#'DimensionsAndCareHTML': dimensionsAndCare,
 
 	with open('%s/%s-RawJson.json' % (upcDir, upc), 'w+') as details:# immediately log the product's parseable json info
 		json.dump(productInfo, details) # dump to logfile as json
