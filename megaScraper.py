@@ -3,7 +3,7 @@ import pandas as pd
 
 inDir = './input/'
 outDir = './output/'
-site = 'amazon'#sys.argv[2]
+site = 'evine'#sys.argv[2]
 spreadsheet = 'dfin.csv'#sys.argv[3]
 dfIn = "%s%s" % (inDir, spreadsheet)
 # ie: Scrape Site With This
@@ -21,19 +21,23 @@ class eCommTools():
 			self.df = pd.read_table(df, encoding='cp1252')
 
 		if self.site == 'evine':
-			from scrapers.evn import evn
-			self.scraperFunction = evn
+			from scrapers.evn import evine
+			self.scraperFunction = evine
 	
+			self.upcList = set([row['Item Name'].split('-')[0] for index, row in self.df.iterrows()])
 			self.webpagePrefix = 'https://www.evine.com/Product/'
-			self.alnumRegex = re.compile("""[^a-zA-Z0-9&"'. ]""")#re.compile('[^a-zA-Z]')
-			self.evineJS = re.compile('clientSideData={.*?};', re.DOTALL) # compile regex for parsing out the raw syntax of json data
+			#self.alnumRegex = re.compile("""[^a-zA-Z0-9&"'. ]""")#re.compile('[^a-zA-Z]')
+			#self.exData = re.compile('clientSideData={.*?};', re.DOTALL)
+			#self.evineJS = re.compile('clientSideData={.*?};', re.DOTALL) # compile regex for parsing out the raw syntax of json data
 			
 		elif self.site == 'qvc':
 			from scrapers.qvc import qvc
 			self.scraperFunction = qvc
 	
-			self.webpagePrefix = 'https://www.qvc.com/product.'
-			self.qvcJS = re.compile('utag_data={.*?};', re.DOTALL)
+			self.upcList = set([row['SKN'] for index, row in self.df.iterrows()]) 
+			self.webpagePrefix = 'https://www.qvc.com/catalog/search.html?keyword='#'https://www.qvc.com/product.'
+			#self.exData = re.compile('utag_data={.*?};', re.DOTALL)
+			#self.qvcJS = re.compile('utag_data={.*?};', re.DOTALL)
 	
 		elif self.site == 'homedepot':
 			from scrapers.thd import thd
@@ -41,6 +45,7 @@ class eCommTools():
 	
 			self.upcList = set([row['UPC'] for index, row in self.df.iterrows()])
 			self.webpagePrefix = 'https://www.homedepot.com/s/'
+			#self.exData = None
 
 		elif self.site == 'amazon':
 			from scrapers.amz import amz
@@ -48,6 +53,7 @@ class eCommTools():
 	
 			self.upcList = set([row['ASIN'] for index, row in self.df.iterrows()])
 			self.webpagePrefix = 'https://www.amazon.com/dp/'
+			#self.exData = None
 
 	def scrape(self):
 		def noDuplicates(upc):
@@ -70,6 +76,8 @@ class eCommTools():
 				
 			except Exception as e: # If SKU url doesn't exist, print error then pass to next one.
 				print('%s\nThere was an error scraping: "%s"\n' % (e, upc))
+				""" PUT LOGGING FUNCTION HERE """
+				""" EITHER WEBPAGE DOESN'T EXIST (likely) OR VAR PASSED FROM SPREADSHEET IS NONE TYPE"""
 				pass
 
 			finally: # increment progress counter
@@ -97,8 +105,21 @@ class eCommTools():
 					print(e)
 					pass
 			self.df = self.df[['Title', 'Model', 'Brand', 'StoreSku', 'UPC', 'Retail']]
-		#elif site == 'amazon':
-		#	for index, row in self.df.iterrows():
+		if site == 'evine':
+			for index, row in self.df.iterrows():
+				upc = str(row["Style"])
+				try:
+					with open('./output/%s/%s/%s-CustomInfo.json' % (site, upc, upc), 'r') as customLog: 
+						jLog = json.load(customLog)
+						#print(jLog["ProductName"])
+						#self.df.loc[index, "Item Description"] = "=HYPERLINK(%s)" % jLog["ProductName"]
+						#print('YOLO: ', self.df.loc[index, "Item Description"])
+						self.df.loc[index, "Item Description"] = '=HYPERLINK("%s%s","%s")' % (self.webpagePrefix, jLog["ProductID"], jLog["ProductName"])#'=HYPERLINK("%s", "%s %s - %s")' % (jLog['productUrl'], jLog['brand'], jLog['productName'], jLog['model'].replace("Model: ", ""))
+						self.df.loc[index, 'EvineRetail'] = jLog['EvinePrice']
+						self.df.loc[index, 'EvineClearancePrice'] = jLog['ClearancePrice']
+				except Exception as e:
+					print(e)
+					''
 
 		self.df.to_csv('./output/dfOut.csv', index=False)
 		self.df.to_excel('./output/dfOut.xlsx', index=False)
@@ -106,9 +127,9 @@ class eCommTools():
 			
 	def sales():
 		"parse sales per vender-brand-upc-grade"
-		def taxes():
-			"while gathering sales data, give option to output quarterly tax info"
-
+	
+	def taxes():
+		"while gathering sales data, give option to output quarterly tax info"
 
 if __name__ == "__main__":
 	e = eCommTools(site, dfIn)
